@@ -23,9 +23,11 @@ Both functions use modules from helpertools folder to perform.
 
 For **run_dna_rna_tools**:
 **Input:** list of any number of strings - DNA or RNA sequences. The last string should specify the operation to be applied to provided sequences - `transcribe'`, `reverse`, `complement` or `reverse complement`.
+
 *Input example:* `['AtGC', 'aGGGT', 'transcribe']`
 
 **Output:** changed sequences as a list, if only one sequence was given, it will return as a string. Operation will not be returned.
+
 *Output example:* `['AuGC', 'aGGGU']` 
 
 For **filter_fastqc**:
@@ -34,9 +36,11 @@ For **filter_fastqc**:
 `gc_bounds` - a tuple of lower and upper bounds for gc-content in provided sequences or an int - only upper bound. If not specified is `(0, 100)` by default;
 `length_bounds` - a tuple of lower and upper bounds for length of provided sequences or an int - only upper bound. If not specified is `(0, 2**32)` by default;
 `quality_threshold` - an int - an upper bound for quality of reads for provided sequences. If not specified is `0` by default;
+
 *Input example:* `{"@SRX079812": ("AGTGAGACACCCCTGAACATTCCTAGTAAG", "<98;<@@@:@CD@BCCDD=DBBCEBBAAA@")}, gc_bounds=(0, 100), length_bounds=(0, 35)`
 
 **Output:** dictionary of sequences that passed by GC-content, length and read quality in format `{name of the sequence: (sequence, quality)}`. If no reads passed, `None` will be returned.
+
 *Output example:* `{"@SRX079812": ("AGTGAGACACCCCTGAACATTCCTAGTAAG", "<98;<@@@:@CD@BCCDD=DBBCEBBAAA@")}`
 
 ## Limitations
@@ -44,6 +48,3 @@ For **filter_fastqc**:
 
 ## Developmend
 By Polina Kalitina (iduvzavtra@gmail.com), evenly spread on the floor by these seemingly easy tasks.
-
-![screenshot of flake8 being pissed at my long lines](flake8_HW4.png)
-![screenshot of pytest for fasqc_filter](pytest_HW4.png)
