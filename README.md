@@ -81,10 +81,11 @@ For **parse_blast_output**:
  'conjugal transfer protein TraC [Enterobacteriaceae]
  'DinI-like family protein [Escherichia coli]`
 
+
 ## Limitations
 **run_dna_rna_tools** can only work with one typa of NA at a time, you can not provide both in one run. It will also not accept mixed sequences with both 'U' and 'T' present and will not accept sequences if operation is not specified.
 
 **parse_blast_output** is not immune to BLAST output modifications. Strings in output may include additional information or syntax defects.
-
 ## Developmend
-By Polina Kalitina (iduvzavtra@gmail.com), shaking in the corner.
+By Polina Kalitina (iduvzavtra@gmail.com), evenly spread on the floor by these seemingly easy tasks.
+
