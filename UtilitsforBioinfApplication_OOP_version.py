@@ -79,10 +79,8 @@ class AminoAcidSequence(BiologicalSequence):
     def __len__(self) -> int:
         return len(self.sequence)
 
-    def __getitem__(self, index: Union[int, slice, Tuple[int, str]]) -> str:
+    def __getitem__(self, index: Union[int, Tuple[int, str]]) -> str:
         if isinstance(index, int):
-            return self.sequence[index]
-        elif isinstance(index, slice):
             return self.sequence[index]
         elif isinstance(index, tuple):
             idx, slice_type = index
