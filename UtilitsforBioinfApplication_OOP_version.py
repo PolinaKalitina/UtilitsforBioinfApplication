@@ -1,34 +1,35 @@
 from abc import ABC, abstractmethod
+from typing import Dict, Tuple, Union
 
 
-class BiologicalSequence(abs.ABS):
+class BiologicalSequence(ABC):
 
     @abstractmethod
-    def __len__(self):
+    def __len__(self) -> int:
         pass
 
     @abstractmethod
-    def __getitem__(self, index):
+    def __getitem__(self, index: Union[int, slice, Tuple[int, str]]) -> str:
         pass
 
     @abstractmethod
-    def __str__(self):
+    def __str__(self) -> str:
         pass
 
     @abstractmethod
-    def check_alphabet(self):
+    def check_alphabet(self) -> bool:
         pass
 
 
 class NucleicAcidSequence(BiologicalSequence):
-    def __init__(self, sequence: str):
-        self.sequence = sequence
-        self.complement_dict = {}
+    def __init__(self, sequence: str) -> None:
+        self.sequence: str = sequence
+        self.complement_dict: Dict[str, str] = {}
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.sequence)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Union[int, slice, Tuple[int, str]]) -> str:
         if isinstance(index, int):
             return self.sequence[index]
         elif isinstance(index, slice):
@@ -40,46 +41,48 @@ class NucleicAcidSequence(BiologicalSequence):
             elif slice_type == "suffix":
                 return self.sequence[idx:]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Nucleic Acid Sequence: {self.sequence}"
 
-    def check_alphabet(self):
+    def check_alphabet(self) -> bool:
         return all(nucleotide in self.complement_dict for nucleotide in self.sequence)
 
-    def complement(self):
+    def complement(self) -> str:
         return ''.join([self.complement_dict[nucl] for nucl in self.sequence])
 
-    def reverse(self):
+    def reverse(self) -> str:
         return self.sequence[::-1]
 
-    def reverse_complement(self):
+    def reverse_complement(self) -> str:
         return self.complement()[::-1]
 
 
 class DNASequence(NucleicAcidSequence):
-    def __init__(self, sequence: str):
+    def __init__(self, sequence: str) -> None:
         super().__init__(sequence)
-        self.complement_dict = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
+        self.complement_dict: Dict[str, str] = {'A': 'T', 'T': 'A', 'C': 'G', 'G': 'C'}
 
-    def transcribe(self):
+    def transcribe(self) -> 'RNASequence':
         return RNASequence(self.sequence.replace('T', 'U'))
 
 
 class RNASequence(NucleicAcidSequence):
-    def __init__(self, sequence: str):
+    def __init__(self, sequence: str) -> None:
         super().__init__(sequence)
-        self.complement_dict = {'A': 'U', 'U': 'A', 'C': 'G', 'G': 'C'}
+        self.complement_dict: Dict[str, str] = {'A': 'U', 'U': 'A', 'C': 'G', 'G': 'C'}
 
 
 class AminoAcidSequence(BiologicalSequence):
-    def __init__(self, sequence: str):
-        self.sequence = sequence
+    def __init__(self, sequence: str) -> None:
+        self.sequence: str = sequence
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.sequence)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: Union[int, slice, Tuple[int, str]]) -> str:
         if isinstance(index, int):
+            return self.sequence[index]
+        elif isinstance(index, slice):
             return self.sequence[index]
         elif isinstance(index, tuple):
             idx, slice_type = index
@@ -88,14 +91,14 @@ class AminoAcidSequence(BiologicalSequence):
             elif slice_type == "suffix":
                 return self.sequence[idx:]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"Amino Acid Sequence: {self.sequence}"
 
-    def check_alphabet(self):
+    def check_alphabet(self) -> bool:
         amino_acids = "ACDEFGHIKLMNPQRSTVWY"
         return all(aa in amino_acids for aa in self.sequence)
 
-    def molecular_weight(self):
+    def molecular_weight(self) -> float:
         aa_weights = {
             'A': 89.09, 'C': 121.16, 'D': 133.10, 'E': 147.13, 'F': 165.19,
             'G': 75.07, 'H': 155.16, 'I': 131.17, 'K': 146.19, 'L': 131.17,
