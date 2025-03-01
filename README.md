@@ -37,6 +37,10 @@ For all types of sequences you can also check its length, estract an element by 
 
    - Quality: Minimum quality score threshold. If not specified is `0` by default;
 
+**convert_multiline_fasta_to_oneline** works with multiline FASTA-files and converts them to oneline.
+
+**parse_blast_output** works with BLAST search output and selects names of proteins with significant alignments.
+
 ## Input and output format
 
 For **UtilsforBioinfApplication_OOP**:
@@ -67,9 +71,42 @@ For **FASTQ_filtr**:
 **Output:** FASTQ-file in .fastq format with sequences that passed by GC-content, length and read quality. If no reads passed, empty file will be returned.
 
 *Output example:* `'output_fastq.fastq'`
+For **convert_multiline_fasta_to_oneline**:
+
+**Input:** two arguments
+`input_fasta` - multiline FASTA file;
+`output_fasta` - empty file to write sequences in. Is optional, if not provided, `input_fasta` is transformed.
+
+*Input format example:*
+`>5S_rRNA::NODE_272_length_223_cov_0.720238:18-129(+)
+ACGGCCATAGGA
+CTTTGAAA`
+
+**Output:** FASTA-file.
+
+*Output format example:* 
+`>5S_rRNA::NODE_272_length_223_cov_0.720238:18-129(+)
+ACGGCCATAGGACTTTGAAA`
+
+For **parse_blast_output**:
+
+**Input:** two arguments:
+`input_file` - .txt file with BLAST search results;
+`output_file` - empty file to write sequences in.
+
+*Output:** .txt file with alphabetically ordered list of proteins with significant alignments.
+
+*Output format example:* 
+`'conjugal transfer protein TraA [Enterobacteriaceae]
+ 'conjugal transfer protein TraC [Enterobacteriaceae]
+ 'DinI-like family protein [Escherichia coli]`
+
+
 
 ## Limitations
 **UtilsforBioinfApplication_OOP** can only work with one typa of NA at a time, you can not provide both in one run. It will also not accept mixed sequences with both 'U' and 'T' present.
+
+**parse_blast_output** is not immune to BLAST output modifications. Strings in output may include additional information or syntax defects.
 
 ## Development
 By Polina Kalitina (iduvzavtra@gmail.com)
