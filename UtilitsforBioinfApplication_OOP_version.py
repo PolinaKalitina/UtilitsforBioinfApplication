@@ -1,7 +1,10 @@
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, Union
+from typing import Dict, Tuple, Union, List
 from Bio import SeqIO
 from Bio.SeqUtils import gc_fraction
+import argparse
+from loguru import logger
+
 
 class BiologicalSequence(ABC):
 
@@ -106,6 +109,7 @@ class AminoAcidSequence(BiologicalSequence):
         }
         return sum(aa_weights[aa] for aa in self.sequence)
 
+
 def quality_check(quality_scores: List[int], quality_threshold: int) -> bool:
     return min(quality_scores) >= quality_threshold
 
@@ -119,30 +123,46 @@ def gc_check(sequence: str, gc_bounds: Tuple[float, float]) -> bool:
     return gc_bounds[0] <= gc_content <= gc_bounds[1]
 
 
-def filter_fastq(
-    input_fastq: str,
-    output_fastq: str,
-    gc_bounds: Tuple[float, float] = (0, 100),
-    length_bounds: Tuple[int, int] = (0, 2**32),
-    quality_threshold: int = 0,
-) -> int:
-    # Чтение последовательностей из файла
-    sequences = SeqIO.parse(input_fastq, "fastq")
-
-    # Фильтрация
-    filtered_sequences = []
-    for record in sequences:
-        sequence = str(record.seq)
-        quality_scores = record.letter_annotations["phred_quality"]
-
-        if (gc_check(sequence, gc_bounds) and
-            length_check(sequence, length_bounds) and
-            quality_check(quality_scores, quality_threshold)):
-            filtered_sequences.append(record)
-
-    # Запись отфильтрованных последовательностей в новый файл
-    count = SeqIO.write(filtered_sequences, output_fastq, "fastq")
-    print(f"Saved {count} reads to {output_fastq}")
+def parse_args():
+    parser = argparse.ArgumentParser(description='FASTQ quality filter')
+    parser.add_argument('-i', '--input', required=True, help='Input FASTQ file')
+    parser.add_argument('-o', '--output', required=True, help='Output FASTQ file')
+    parser.add_argument('--gc-bounds', type=float, nargs=2, default=[0, 100],
+                        metavar=('MIN', 'MAX'), help='GC content bounds (0-100%)')
+    parser.add_argument('--length-bounds', type=int, nargs=2, default=[0, 2**32],
+                        metavar=('MIN', 'MAX'), help='Length bounds')
+    parser.add_argument('-q', '--quality', type=int, default=0,
+                        help='Minimum quality threshold')
+    parser.add_argument('--log', default='fastq_filter.log', help='Log file path')
+    return parser.parse_args()
 
 
+def setup_logging(log_file: str):
+    logger.add(log_file, rotation="10 MB", level="INFO")
 
+
+def filter_fastq():
+    args = parse_args()
+    setup_logging(args.log)
+
+    try:
+        logger.info(f"Starting filtering with params: {vars(args)}")
+        sequences = SeqIO.parse(args.input, "fastq")
+
+        filtered = []
+        for record in sequences:
+            seq = str(record.seq)
+            quals = record.letter_annotations["phred_quality"]
+
+            if (gc_check(seq, args.gc_bounds) and \
+               length_check(seq, args.length_bounds) and \
+               quality_check(quals, args.quality)):
+                filtered.append(record)
+
+        count = SeqIO.write(filtered, args.output, "fastq")
+        logger.info(f"Saved {count} reads to {args.output}")
+        return count
+
+    except Exception as e:
+        logger.error(f"Processing failed: {str(e)}")
+        raise
