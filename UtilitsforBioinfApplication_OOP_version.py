@@ -120,6 +120,10 @@ def length_check(sequence: str, length_bounds: Tuple[int, int]) -> bool:
 
 def gc_check(sequence: str, gc_bounds: Tuple[float, float]) -> bool:
     gc_content = 100 * gc_fraction(sequence)
+    if gc_bounds[0] < 0 or gc_bounds[1] > 100:
+        raise ValueError("GC bounds must be between 0 and 100")
+    gc_content = 100 * (sequence.count('G') + sequence.count('C')) / len(sequence)
+
     return gc_bounds[0] <= gc_content <= gc_bounds[1]
 
 

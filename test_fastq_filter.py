@@ -28,9 +28,21 @@ class TestFileOperations:
         if output_f.exists():
             os.remove(output_f)
 
-    def test_file_processing(self, temp_files):
+    def test_file_processing(self, temp_files, monkeypatch):
         input_f, output_f = temp_files
-        count = filter_fastq(input_f, output_f)
+
+        with monkeypatch.context() as m:
+            m.setattr('sys.argv', [
+                'fastq_filter.py',
+                '-i', str(input_f),
+                '-o', str(output_f),
+                '--gc-bounds', '0', '100',
+                '--length-bounds', '1', '10',
+                '-q', '0' 
+            ])
+
+            count = filter_fastq()
+
         assert count == 1
         assert os.path.exists(output_f)
 
