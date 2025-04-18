@@ -37,6 +37,12 @@ For all types of sequences you can also check its length, estract an element by 
 
    - Quality: Minimum quality score threshold. If not specified is `0` by default;
 
+Also prvides:
+
+ - Detailed logging: Comprehensive log file with filtering statistics
+ - Input validation: Checks for correct FASTQ format
+ - Debug output: Shows filtering parameters for troubleshooting
+
 **convert_multiline_fasta_to_oneline** works with multiline FASTA-files and converts them to oneline.
 
 **parse_blast_output** works with BLAST search output and selects names of proteins with significant alignments.
@@ -59,18 +65,29 @@ For **UtilsforBioinfApplication_OOP**:
 
 For **FASTQ_filtr**:
 
-**Input:** five arguments:
+**Filtering Options:** five arguments:
 `input_fastq` -  Path to the input FASTQ file;
+
 `output_fastq` - Path to the output FASTQ file;
-`gc_bounds` - a tuple of lower and upper bounds for gc-content in provided sequences or an int - only upper bound. If not specified is `(0, 100)` by default;
-`length_bounds` - a tuple of lower and upper bounds for length of provided sequences or an int - only upper bound. If not specified is `(0, 2**32)` by default;
-`quality_threshold` - an int - an upper bound for quality of reads for provided sequences. If not specified is `0` by default;
 
-*Input example:* `'example_fastq.fastq', 'output_fastq.fastq', gc_bounds=(0, 100), length_bounds=(0, 35)`
+`--gc-bounds MIN MAX` - a tuple of lower and upper bounds for gc-content in provided sequences or an int - only upper bound;
 
-**Output:** FASTQ-file in .fastq format with sequences that passed by GC-content, length and read quality. If no reads passed, empty file will be returned.
+`--length-bounds MIN MAX` - a tuple of lower and upper bounds for length of provided sequences or an int - only upper bound;
 
-*Output example:* `'output_fastq.fastq'`
+`--quality` - an int - an upper bound for quality of reads for provided sequences;
+
+`--log` - Path to log file (default: fastq_filter.log).
+
+*Usage:* `python fastq_filter.py -i INPUT.FASTQ -o OUTPUT.FASTQ [OPTIONS]`
+
+**Output:** 
+- FASTQ-file in .fastq format with sequences that passed by GC-content, length and read quality. If no reads passed, empty file will be returned;
+- Log file (fastq_filter.log by default) with:
+     - Input parameters
+     - Filtering statistics (total reads, passed/failed counts)
+     - First 5 passed reads details (ID, length, GC%, min quality)
+     - Error messages if any occur
+
 For **convert_multiline_fasta_to_oneline**:
 
 **Input:** two arguments
@@ -100,6 +117,55 @@ For **parse_blast_output**:
 `'conjugal transfer protein TraA [Enterobacteriaceae]
  'conjugal transfer protein TraC [Enterobacteriaceae]
  'DinI-like family protein [Escherichia coli]`
+
+### FASTQ-filtrator additional features
+
+**Debugging**
+
+The log file includes detailed information for troubleshooting:
+
+ - Parameters of first 20 reads;
+ - Reason for filtering failure for each read;
+ - Summary statistics showing how many reads failed each filter.
+
+**Error Handling**
+
+The tool validates:
+
+ - Input file exists and is in FASTQ format;
+
+ - GC bounds are between 0 and 100;
+
+ - Minimum length ≤ maximum length;
+
+ - Output directory is writable.
+
+**Testing**
+
+Unit tests are available to verify functionality:
+
+  - Quality score filtering;
+
+  - Length filtering;
+
+  - GC content filtering;
+
+  - File operations;
+
+  - Error handling.
+
+Run tests with: `pytest test_fastq_filter.py` in bash.
+
+**Dependencies**
+
+  - Python 3.6+
+
+  - Biopython
+
+  - Loguru (for logging)
+
+  - pytest (for testing)
+
 
 
 
