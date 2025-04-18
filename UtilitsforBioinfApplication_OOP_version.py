@@ -119,11 +119,11 @@ def length_check(sequence: str, length_bounds: Tuple[int, int]) -> bool:
 
 
 def gc_check(sequence: str, gc_bounds: Tuple[float, float]) -> bool:
-    gc_content = 100 * gc_fraction(sequence)
+    if not sequence:
+        return False
     if gc_bounds[0] < 0 or gc_bounds[1] > 100:
         raise ValueError("GC bounds must be between 0 and 100")
     gc_content = 100 * (sequence.count('G') + sequence.count('C')) / len(sequence)
-
     return gc_bounds[0] <= gc_content <= gc_bounds[1]
 
 
@@ -145,28 +145,94 @@ def setup_logging(log_file: str):
     logger.add(log_file, rotation="10 MB", level="INFO")
 
 
+def is_fastq_file(filename: str) -> bool:
+    try:
+        with open(filename) as f:
+            for i, line in enumerate(f):
+                if i >= 4:
+                    break
+                if i == 0 and not line.startswith('@'):
+                    return False
+                if i == 2 and not line.startswith('+'):
+                    return False
+        return True
+    except:
+        return False
+
+
 def filter_fastq():
     args = parse_args()
+    if not is_fastq_file(args.input):
+        logger.error(f"Input file {args.input} is not in FASTQ format")
+        raise ValueError("Input file is not in FASTQ format")
+
     setup_logging(args.log)
 
     try:
         logger.info(f"Starting filtering with params: {vars(args)}")
-        sequences = SeqIO.parse(args.input, "fastq")
+        try:
+            sequences = list(SeqIO.parse(args.input, "fastq"))
+            total_reads = len(sequences)
+            logger.info(f"Total reads: {total_reads}")
+        except FileNotFoundError:
+            logger.error(f"Input file {args.input} not found")
+            raise
+        except Exception as e:
+            logger.error(f"Error reading input file: {str(e)}")
+            raise
+        
+        stats = {
+            'total': total_reads,
+            'passed': 0,
+            'failed_quality': 0,
+            'failed_length': 0,
+            'failed_gc': 0
+        }
 
         filtered = []
         for record in sequences:
             seq = str(record.seq)
-            quals = record.letter_annotations["phred_quality"]
+            quals = record.letter_annotations.get("phred_quality", [])
 
-            if (gc_check(seq, args.gc_bounds) and \
-               length_check(seq, args.length_bounds) and \
-               quality_check(quals, args.quality)):
+            quality_ok = quality_check(quals, args.quality)
+            length_ok = length_check(seq, args.length_bounds)
+            gc_ok = gc_check(seq, args.gc_bounds)
+
+            if not quality_ok:
+                stats['failed_quality'] += 1
+            if not length_ok:
+                stats['failed_length'] += 1
+            if not gc_ok:
+                stats['failed_gc'] += 1
+
+            if quality_ok and length_ok and gc_ok:
                 filtered.append(record)
+                stats['passed'] += 1
+
+        logger.info("\nFiltering statistics:")
+        logger.info(f"Total reads: {stats['total']}")
+        logger.info(f"Passed filters: {stats['passed']} ({stats['passed']/stats['total']:.1%})")
+        logger.info(f"Failed by quality: {stats['failed_quality']}")
+        logger.info(f"Failed by length: {stats['failed_length']}")
+        logger.info(f"Failed by GC content: {stats['failed_gc']}")
+
+        if filtered:
+            logger.info("\nFirst 5 passed reads:")
+            for record in filtered[:5]:
+                gc_content = 100 * (record.seq.count('G') + record.seq.count('C')) / len(record.seq)
+                logger.info(f"ID: {record.id}, Length: {len(record.seq)}, GC: {gc_content:.1f}%, "
+                          f"Min quality: {min(record.letter_annotations.get('phred_quality', []))}")
+        else:
+            logger.warning("No reads passed all filters!")
 
         count = SeqIO.write(filtered, args.output, "fastq")
-        logger.info(f"Saved {count} reads to {args.output}")
+        logger.info(f"\nSaved {count} reads to {args.output}")
         return count
 
     except Exception as e:
         logger.error(f"Processing failed: {str(e)}")
         raise
+
+
+if __name__ == "__main__":
+    filter_fastq()
