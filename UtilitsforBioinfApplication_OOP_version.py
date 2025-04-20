@@ -111,10 +111,14 @@ class AminoAcidSequence(BiologicalSequence):
 
 
 def quality_check(quality_scores: List[int], quality_threshold: int) -> bool:
+    if not quality_scores:
+        return False
     return min(quality_scores) >= quality_threshold
 
 
 def length_check(sequence: str, length_bounds: Tuple[int, int]) -> bool:
+    if not sequence:
+        return False
     return length_bounds[0] <= len(sequence) <= length_bounds[1]
 
 
